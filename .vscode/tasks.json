@@ -1,0 +1,23 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "-o",
+                "d:/GUSEProjects/GraphicsEngine/build/GUSEGraphicsEngine.exe",
+                "d:/GUSEProjects/GraphicsEngine/src/classes/Window.cpp",
+                "d:/GUSEProjects/GraphicsEngine/src/main.cpp",
+                "-lgdi32"
+            ],
+            "group": {
+                "kind" : "build",
+                "isDefault" : true
+            }
+        }
+    ]
+}
