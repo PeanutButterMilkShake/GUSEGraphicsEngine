@@ -4,7 +4,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Window mainWindow(hInstance);
 
     //Create window and run message loop
-    mainWindow.createWindow(L"GUSE Graphics Engine", 500, 500, 200, 200);
+    mainWindow.createWindow(L"Graphics Engine", 500, 500, 200, 200);
     mainWindow.changeIcon("../assets/Icon.ico");
     mainWindow.refreshWindow();
     mainWindow.runMessageLoop();
