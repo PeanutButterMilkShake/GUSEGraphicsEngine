@@ -1,0 +1,49 @@
+#ifndef OBJECT_H
+#define OBJECT_H
+
+#include <vector>
+#include <memory>
+#include <algorithm>
+#include "Utility.h"
+
+class Scene;
+
+class Object
+{
+public:
+    unsigned int id;
+    std::string name;
+    Vector3 position;
+    Vector3 rotation;
+    Vector3 scale;
+    Object *parent;
+    std::vector<Object *> children;
+
+    Object();
+    ~Object();
+
+    virtual void Start();
+    virtual void Update(float deltaTime, GLFWwindow* window);
+    virtual void FixedUpdate(float fixedDeltaTime, GLFWwindow* window);
+
+    void SetParent(Object *newParent)
+    {
+        if (parent)
+        {
+            auto &siblings = parent->children;
+            siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
+        }
+
+        parent = newParent;
+
+        if (newParent)
+        {
+            newParent->children.push_back(this);
+        }
+    }
+
+private:
+    static unsigned int nextId;
+};
+
+#endif

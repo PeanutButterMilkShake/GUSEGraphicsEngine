@@ -1,0 +1,30 @@
+#include <iostream>
+#include <GUSEGE/Utility.h>
+
+struct VoxelData
+{
+    std::string name;
+    Vector3 color;
+};
+
+class VoxelRegistry{
+public:
+    inline static std::vector<VoxelData> voxels;
+
+    static void AddToRegistry(VoxelData voxelData)
+    {
+        std::cout << voxelData.name << std::endl;
+        voxels.push_back(voxelData);
+    }
+
+    static VoxelData GetBlockFromRegistry(std::string voxelName)
+    {
+        for (auto voxelData : voxels)
+        {
+            if(voxelData.name == voxelName)
+                return voxelData;
+        }
+
+        return VoxelData();
+    }
+};
