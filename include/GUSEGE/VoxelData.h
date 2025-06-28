@@ -5,7 +5,11 @@ struct VoxelData
 {
     std::string name;
     Vector3 color;
+
+    VoxelData(std::string name = "air", Vector3 color = Vector3())
+    : name(name), color(color) {}
 };
+
 
 class VoxelRegistry{
 public:

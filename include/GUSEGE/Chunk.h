@@ -15,6 +15,7 @@
 #include <glm/gtc/noise.hpp>
 #include <GUSEGE/Object.h>
 #include <GUSEGE/VoxelData.h>
+#include <map>
 
 using namespace Utility;
 
@@ -34,7 +35,7 @@ public:
     EBO ebo;
 
     // Mesh data
-    Vector3 chunkDimensions;
+    static Vector3 chunkDimensions;
     std::vector<std::string> chunkData;
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
@@ -43,6 +44,8 @@ public:
     virtual void Update(float deltaTime, GLFWwindow* window);
     virtual void FixedUpdate(float fixedDeltaTime, GLFWwindow* window);
 
+    VoxelData GetBlockAt(Vector3 position);
+    bool IsAirAt(Vector3 position);
     void GenerateChunk();
     void GenerateMesh();
     void ApplyShaders();

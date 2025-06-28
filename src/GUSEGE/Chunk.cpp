@@ -1,9 +1,44 @@
 #include <GUSEGE/Chunk.h>
 
-int getIndex(int x, int y, int z, const Vector3 dim) {
+struct FaceTransform {
+    Vector3 blockToCheck;
+    glm::vec3 rotationAxis;
+    float rotationAngle;
+    glm::vec3 offset;
+};
+
+std::vector<FaceTransform> faceTransforms = {
+    { Vector3( 0,  1,  0), glm::vec3(0, 0, 0),     0.0f,  glm::vec3(0, 1, 0) },    
+    { Vector3( 1,  0,  0), glm::vec3(0, 0, 1),    -90.0f,  glm::vec3(1.0f, 0, 0) },    
+    { Vector3(-1,  0,  0), glm::vec3(0, 0, 1),   90.0f,  glm::vec3(-1.0f, 0, 0) },   
+    { Vector3( 0,  0,  1), glm::vec3(1, 0, 0),   90.0f,  glm::vec3(0, 0, 1.0f) },    
+    { Vector3( 0,  0, -1), glm::vec3(1, 0, 0),    -90.0f,  glm::vec3(0, 0, -1.0f) },   
+    { Vector3( 0, -1,  0), glm::vec3(1, 0, 0),   180.0f,  glm::vec3(0, 0, 0) }    
+};
+
+int GetIndex(int x, int y, int z, const Vector3 dim) {
     return x * dim.y * dim.z + y * dim.z + z;
 }
 
+VoxelData Chunk::GetBlockAt(Vector3 position)
+{
+    if (position.x < 0 || position.y < 0 || position.z < 0 ||
+        position.x >= chunkDimensions.x ||
+        position.y >= chunkDimensions.y ||
+        position.z >= chunkDimensions.z)
+    {
+        return VoxelData(); // returns default = "air"
+    }
+
+    return VoxelRegistry::GetBlockFromRegistry(
+        chunkData[GetIndex(position.x, position.y, position.z, chunkDimensions)]
+    );
+}
+
+bool Chunk::IsAirAt(Vector3 position)
+{
+    return Chunk::GetBlockAt(position).name == "air";
+}
 
 void Chunk::ApplyShaders()
 {
@@ -20,38 +55,57 @@ void Chunk::ApplyShaders()
 
 void Chunk::GenerateChunk()
 {
+    srand(static_cast<unsigned int>(time(nullptr)));
+
     for (int x = 0; x < chunkDimensions.x; x++)
     {
         for (int z = 0; z < chunkDimensions.z; z++)
         {
-            float scale = 0.05f; // Adjust this to control terrain frequency
-            float noise = glm::perlin(glm::vec2(x, z) * scale);
+            float scale = 0.01f; // Adjust this to control terrain frequency
+            float noise = glm::perlin(glm::vec2(x + position.x, z + position.z) * scale);
 
             noise = (noise + 1.0f) / 2.0f;
             int height = static_cast<int>(std::round(noise * (chunkDimensions.y - 1)));
 
             for (int y = 0; y <= height; ++y) {
-                float r = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
-                
-                if(r > 0.5)
-                    chunkData[getIndex(x,y,z, chunkDimensions)] = "red";
-                else
-                    chunkData[getIndex(x,y,z, chunkDimensions)] = "blue";
+                chunkData[GetIndex(x, y, z, chunkDimensions)] = "stone";
             }
         }
     }
 }
 
-std::vector<Vertex> OffsetVoxelVerts(std::vector<Vertex> voxelVerts, Vector3 position, Vector3 color)
+std::vector<Vertex> OffsetVoxelVerts(const std::vector<Vertex>& voxelVerts, Vector3 position, const FaceTransform& transform, Vector3 color) 
 {
     std::vector<Vertex> result;
     result.reserve(voxelVerts.size());
 
-    for (const auto& v : voxelVerts)
-    {
+    glm::mat4 model = glm::mat4(1.0f);
+    
+    // Apply rotation if needed
+    if (transform.rotationAngle != 0.0f) {
+        model = glm::rotate(model, glm::radians(transform.rotationAngle), transform.rotationAxis);
+    }
+
+    // Extract rotation matrix for normals (upper-left 3x3 of model)
+    glm::mat3 normalMatrix = glm::mat3(model);
+
+    for (const auto& v : voxelVerts) {
         Vertex offsetVert = v;
-        offsetVert.position += position/10;
+
+        // Transform position (correct order: model * vec4)
+        offsetVert.position = model * glm::vec4(glm::vec3(v.position), 1.0f);
+
+        // Translate to chunk position + offset, scaled down if needed
+        offsetVert.position += glm::vec4(((glm::vec3)position + transform.offset) / 10.0f, 0.0f);
+
+        // Transform normal vector by rotation matrix only
+        offsetVert.normal = normalMatrix * glm::vec3(v.normal);
+
+        // Make sure normal is normalized
+        offsetVert.normal = offsetVert.normal.Normalized();
+
         offsetVert.color = color;
+
         result.push_back(offsetVert);
     }
 
@@ -61,9 +115,9 @@ std::vector<Vertex> OffsetVoxelVerts(std::vector<Vertex> voxelVerts, Vector3 pos
 
 void Chunk::GenerateMesh()
 {
-    std::vector<Vertex> voxelVerts;
-    std::vector<unsigned int> voxelIndicies;
-    ReadMeshFile("D:\\GUSEProjects\\GraphicsEngine\\assets\\Models\\Cube.obj", &voxelVerts, &voxelIndicies);
+    std::vector<Vertex> planeVerts;
+    std::vector<unsigned int> planeIndicies;
+    ReadMeshFile("D:\\GUSEProjects\\GraphicsEngine\\assets\\Models\\Plane.obj", &planeVerts, &planeIndicies);
 
     unsigned int vertexOffset = 0;
     for (int x = 0; x < chunkDimensions.x; x++)
@@ -72,20 +126,38 @@ void Chunk::GenerateMesh()
         {
             for (int y = 0; y < chunkDimensions.y; ++y)
             {
-                if(chunkData[getIndex(x, y, z, chunkDimensions)] == "")
+                if(chunkData[GetIndex(x, y, z, chunkDimensions)] == "")
                     continue;
 
-                Vector3 voxelColor = VoxelRegistry::GetBlockFromRegistry(chunkData[getIndex(x, y, z, chunkDimensions)]).color;
+                Vector3 voxelColor = VoxelRegistry::GetBlockFromRegistry(chunkData[GetIndex(x, y, z, chunkDimensions)]).color;
+                Vector3 voxelPosition = Vector3(x, y, z);
 
-                std::vector<Vertex> offsetVerts = OffsetVoxelVerts(voxelVerts, Vector3(x,y,z), voxelColor);
-                vertices.insert(vertices.end(), offsetVerts.begin(), offsetVerts.end());
+                for (const auto& face : faceTransforms)
+                {
+                    Vector3 neighborPos = voxelPosition + face.blockToCheck;
+                    if (neighborPos.x < 0 || neighborPos.x >= chunkDimensions.x ||
+                        neighborPos.y < 0 || neighborPos.y >= chunkDimensions.y ||
+                        neighborPos.z < 0 || neighborPos.z >= chunkDimensions.z) {
+                        continue;
+                    }
 
-                for (unsigned int i = 0; i < voxelIndicies.size(); ++i) {
-                    indices.push_back(voxelIndicies[i] + vertexOffset);
+                    if (IsAirAt(neighborPos)) {
+                        auto offsetVerts = OffsetVoxelVerts(
+                            planeVerts,
+                            Vector3(x, y, z),
+                            face,
+                            voxelColor
+                        );
+
+                        vertices.insert(vertices.end(), offsetVerts.begin(), offsetVerts.end());
+
+                        for (unsigned int i = 0; i < planeIndicies.size(); ++i) {
+                            indices.push_back(planeIndicies[i] + vertexOffset);
+                        }
+
+                        vertexOffset += static_cast<unsigned int>(planeVerts.size());
+                    }
                 }
-
-
-                vertexOffset += static_cast<unsigned int>(voxelVerts.size());
 
             }
         }
@@ -152,7 +224,7 @@ void Chunk::Start()
 {
     std::vector<std::string> testVoxelData = splitStringIntoWords(LoadFileSource("D:\\GUSEProjects\\GraphicsEngine\\assets\\Blocks\\TestVoxels.txt"));
 
-    VoxelData currentVoxel;
+    VoxelData currentVoxel = VoxelData();
     bool editingVoxel = false;
     for (int i = 0; i < testVoxelData.size(); i++)
     {
@@ -163,7 +235,7 @@ void Chunk::Start()
             if(editingVoxel)
                 VoxelRegistry::AddToRegistry(currentVoxel);
 
-            currentVoxel = VoxelData{};
+            currentVoxel = VoxelData("air", Vector3());
             editingVoxel = true;
         }
         if(word == "name")

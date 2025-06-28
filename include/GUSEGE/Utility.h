@@ -36,6 +36,17 @@ struct Vector3
     float x, y, z;
 
     Vector3(float x = 0.0f, float y = 0.0f, float z = 0.0f) : x(x), y(y), z(z) {}
+    Vector3(const glm::vec3& v3) : x(v3.x), y(v3.y), z(v3.z) {}
+    Vector3(const glm::vec4& v4) : x(v4.x), y(v4.y), z(v4.z) {}
+
+    // == operator
+    bool operator==(const Vector3& other) const
+    {
+        const float epsilon = 0.00001f;
+        return std::fabs(x - other.x) < epsilon &&
+               std::fabs(y - other.y) < epsilon &&
+               std::fabs(z - other.z) < epsilon;
+    }
 
     // Normalize
     Vector3 Normalized() const
@@ -48,6 +59,10 @@ struct Vector3
         return Vector3(0.0f, 0.0f, 0.0f);
     }
 
+    float magnitude() const {
+        return std::sqrt(x * x + y * y + z * z);
+    }
+
     // Negation
     Vector3 operator-() const
     {
@@ -58,6 +73,11 @@ struct Vector3
     operator glm::vec3() const
     {
         return glm::vec3(x, y, z);
+    }
+
+    operator glm::vec4() const
+    {
+        return glm::vec4(x, y, z, 1.0f);
     }
 
     // Vector + Vector
@@ -108,8 +128,14 @@ struct Vector3
         x /= scalar; y /= scalar; z /= scalar;
         return *this;
     }
-};
 
+
+
+    // Common direction vectors
+    static Vector3 Right()   { return Vector3(1.0f, 0.0f, 0.0f); }
+    static Vector3 Up()      { return Vector3(0.0f, 1.0f, 0.0f); }
+    static Vector3 Forward() { return Vector3(0.0f, 0.0f, -1.0f); } // -Z is forward in right-handed OpenGL
+};
 
 struct Vertex
 {
