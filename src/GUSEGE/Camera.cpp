@@ -83,13 +83,13 @@ void Camera::Update(float deltaTime, GLFWwindow* window)
 
     // Rotation controls (yaw and pitch)
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-        rotation.y -= speed * 3 * deltaTime; // Yaw left
+        rotation.y -= speed * 10 * deltaTime; // Yaw left
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-        rotation.y += speed * 3 * deltaTime; // Yaw right
+        rotation.y += speed * 10 * deltaTime; // Yaw right
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-        rotation.x -= speed * 3 * deltaTime; // Pitch up
+        rotation.x += speed * 10 * deltaTime; // Pitch up
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-        rotation.x += speed * 3 * deltaTime; // Pitch down
+        rotation.x -= speed * 10 * deltaTime; // Pitch down
 
     // Optional: clamp pitch so you don't flip the camera
     if(rotation.x > 89.0f) rotation.x = 89.0f;

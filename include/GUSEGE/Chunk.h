@@ -29,7 +29,7 @@ public:
 
     // OpenGL objects
 
-    Shader shaderProgram;
+    Shader* shaderProgram;
     VAO vao;
     VBO vbo;
     EBO ebo;

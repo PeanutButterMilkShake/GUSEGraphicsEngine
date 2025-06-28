@@ -7,7 +7,7 @@ void Shader::Load(const char *vertexPath, const char *fragmentPath)
     std::string fragSrcStr = LoadFileSource(fragmentPath);
     const char *vertSrc = vertSrcStr.c_str();
     const char *fragSrc = fragSrcStr.c_str();
-
+    
     // Create and compile vertex shader
     GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertexShader, 1, &vertSrc, NULL);
@@ -32,12 +32,6 @@ void Shader::Load(const char *vertexPath, const char *fragmentPath)
 
     // Set program ID
     ID = shaderProgram;
-
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR)
-    {
-        std::cerr << "OpenGL error: " << err << std::endl;
-    }
 
     // Delete shaders as they are no longer needed
     glDeleteShader(vertexShader);

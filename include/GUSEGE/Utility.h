@@ -12,6 +12,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <ostream>
 
 struct LightData
 {
@@ -46,6 +47,11 @@ struct Vector3
         return std::fabs(x - other.x) < epsilon &&
                std::fabs(y - other.y) < epsilon &&
                std::fabs(z - other.z) < epsilon;
+    }
+
+    std::ostream& print(std::ostream& os) const {
+        os << "(" << x << ", " << y << ", " << z << ")";
+        return os;
     }
 
     // Normalize
@@ -136,6 +142,10 @@ struct Vector3
     static Vector3 Up()      { return Vector3(0.0f, 1.0f, 0.0f); }
     static Vector3 Forward() { return Vector3(0.0f, 0.0f, -1.0f); } // -Z is forward in right-handed OpenGL
 };
+
+inline std::ostream& operator<<(std::ostream& os, const Vector3& vec) {
+    return vec.print(os);
+}
 
 struct Vertex
 {

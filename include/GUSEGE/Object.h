@@ -16,6 +16,10 @@ public:
     Vector3 position;
     Vector3 rotation;
     Vector3 scale;
+    
+    Vector3 globalPosition;
+    Vector3 globalRotation;
+    Vector3 globalScale;
     Object *parent;
     std::vector<Object *> children;
 
@@ -26,21 +30,7 @@ public:
     virtual void Update(float deltaTime, GLFWwindow* window);
     virtual void FixedUpdate(float fixedDeltaTime, GLFWwindow* window);
 
-    void SetParent(Object *newParent)
-    {
-        if (parent)
-        {
-            auto &siblings = parent->children;
-            siblings.erase(std::remove(siblings.begin(), siblings.end(), this), siblings.end());
-        }
-
-        parent = newParent;
-
-        if (newParent)
-        {
-            newParent->children.push_back(this);
-        }
-    }
+    void SetParent(Object *newParent);
 
 private:
     static unsigned int nextId;

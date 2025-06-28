@@ -18,10 +18,7 @@
 #include <GUSEGE/UBO.h>
 #include <GUSEGE/Shader.h>
 #include <GUSEGE/Chunk.h>
-
-#ifndef ImGuiDockNodeFlags_NoTabBar
-#define ImGuiDockNodeFlags_NoTabBar (1 << 9) // Usually bit 9, but check your imgui.h if different
-#endif
+#include <GUSEGE/ChunkLoader.h>
 
 class GUSEGE
 {
@@ -119,6 +116,9 @@ public:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Scene Update (always runs)
+
+
+        
         Scene::Update();
 
         glfwSwapBuffers(window);

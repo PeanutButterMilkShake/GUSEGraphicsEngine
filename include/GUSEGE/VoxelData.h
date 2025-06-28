@@ -17,7 +17,6 @@ public:
 
     static void AddToRegistry(VoxelData voxelData)
     {
-        std::cout << voxelData.name << std::endl;
         voxels.push_back(voxelData);
     }
 

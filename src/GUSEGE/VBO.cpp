@@ -13,6 +13,7 @@ VBO::~VBO()
 void VBO::Bind()
 {
     glBindBuffer(GL_ARRAY_BUFFER, ID);
+    
 }
 
 void VBO::Unbind()
