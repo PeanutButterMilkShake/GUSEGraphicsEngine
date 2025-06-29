@@ -8,11 +8,17 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-out vec4 voxelColor;
+out vec3 FragPos;      // world space position
+out vec3 Normal;       // normal in world space
+out vec3 VoxelColor;   // pass color as vec3
 
 void main()
 {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
-    voxelColor = vec4(aColor, 1.0);
+    vec4 worldPosition = model * vec4(aPos, 1.0);
+    FragPos = worldPosition.xyz;
+
+    Normal = mat3(transpose(inverse(model))) * aNormal; // transform normal properly
+    VoxelColor = aColor;
+
+    gl_Position = projection * view * worldPosition;
 }
-    
